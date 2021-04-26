@@ -55,7 +55,8 @@ class NumberTriviaRepositoryImpl implements NumberTriviaRepository {
       } on ServerException {
         return Left(ServerFailure());
       }
-    } else {
+    } 
+    else {
       try {
         final result = await localDataSource.getLastNumberTrivia();
         return Right(result);

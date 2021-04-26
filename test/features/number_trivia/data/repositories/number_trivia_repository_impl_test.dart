@@ -214,5 +214,38 @@ main() {
         expect(result, equals(Left(ServerFailure())));
       });
     });
+
+    runTestsOffline(() {
+      test(
+          'should return last locally cached data when the cached data is present',
+          () async {
+        // arrange
+        when(mockLocalDataSource.getLastNumberTrivia())
+            .thenAnswer((_) async => tNumberTriviaModel);
+
+        // act
+        final result = await repository.getRandomNumberTrivia();
+
+        // assert
+        verifyZeroInteractions(mockRemoteDataSource);
+        verify(mockLocalDataSource.getLastNumberTrivia());
+        expect(result, equals(Right(tNumberTrivia)));
+      });
+
+      test('should return cache failure when there is no cached data',
+          () async {
+        // arrange
+        when(mockLocalDataSource.getLastNumberTrivia())
+            .thenThrow(CacheException());
+
+        // act
+        final result = await repository.getRandomNumberTrivia();
+
+        // assert
+        verifyZeroInteractions(mockRemoteDataSource);
+        verify(mockLocalDataSource.getLastNumberTrivia());
+        expect(result, equals(Left(CacheFailure())));
+      });
+    });
   });
 }
