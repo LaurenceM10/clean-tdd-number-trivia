@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:flutter_clean_architecture_tdd/src/core/error/exception.dart';
 import 'package:flutter_clean_architecture_tdd/src/core/error/failures.dart';
-import 'package:flutter_clean_architecture_tdd/src/core/platform/network_info.dart';
+import 'package:flutter_clean_architecture_tdd/src/core/network/network_info.dart';
 import 'package:flutter_clean_architecture_tdd/src/features/number_trivia/domain/entities/number_trivia.dart';
 import 'package:flutter_clean_architecture_tdd/src/features/number_trivia/data/models/number_trivia_model.dart';
 import 'package:flutter_clean_architecture_tdd/src/features/number_trivia/data/repositories/number_trivia_repository_impl.dart';
