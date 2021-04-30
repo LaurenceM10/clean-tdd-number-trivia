@@ -9,7 +9,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:matcher/matcher.dart';
 
-import '../../../../fixtures/fixture_reader.dart';
+import '../../../../../fixtures/fixture_reader.dart';
 
 class MockSharedPreferences extends Mock implements SharedPreferences {}
 
