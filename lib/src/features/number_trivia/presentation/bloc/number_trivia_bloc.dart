@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_clean_architecture_tdd/src/core/util/input_converter.dart';
@@ -32,8 +33,7 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
     NumberTriviaEvent event,
   ) async* {
     if (event is GetTriviaForConcreteNumber) {
-      final inputEither =
-          inputConverter.stringToUnsignedInteger(event.number);
+      final inputEither = inputConverter.stringToUnsignedInteger(event.number);
 
       yield* inputEither.fold(
         (failure) async* {
@@ -41,7 +41,15 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
         },
         // Although the "success case" doesn't interest us with the current test,
         // we still have to handle it somehow.
-        (integer) => throw UnimplementedError(),
+        (integer) async* {
+          yield Loading();
+
+          final number =
+              await getConcreteNumberTrivia.call(Params(number: integer));
+          yield number.fold((l) => throw UnimplementedError(), (right) {
+            return Loaded(numberTrivia: right);
+          });
+        },
       );
     }
   }

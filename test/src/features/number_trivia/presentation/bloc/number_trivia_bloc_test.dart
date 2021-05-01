@@ -48,12 +48,28 @@ void main() {
     blocTest(
       'shoul emit [Error] when the input is invalid',
       build: () {
-        when(mockInputConverter.stringToUnsignedInteger(any)).thenReturn(Left(InvalidInputFailure()));
+        when(mockInputConverter.stringToUnsignedInteger(any))
+            .thenReturn(Left(InvalidInputFailure()));
         return bloc;
       },
       act: (bloc) =>
           bloc.add(GetTriviaForConcreteNumber(number: tNumberString)),
       expect: () => [Error(message: INVALID_INPUT_FAILURE_MESSAGE)],
+    );
+
+    blocTest(
+      'should get data from GetConcreteNumberTrivia usecase',
+      build: () {
+        when(mockInputConverter.stringToUnsignedInteger(any))
+            .thenReturn(Right(tNumberParsed));
+        when(mockGetConcreteNumberTrivia.call(any))
+            .thenAnswer((_) async => Right(tNumberTrivia));
+
+        return bloc;
+      },
+      act: (bloc) =>
+          bloc.add(GetTriviaForConcreteNumber(number: tNumberString)),
+      expect: () => [Loading(), Loaded(numberTrivia: tNumberTrivia)],
     );
   });
 }
