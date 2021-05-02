@@ -1,9 +1,9 @@
 import 'dart:async';
 
 import 'package:bloc/bloc.dart';
-import 'package:dartz/dartz.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_clean_architecture_tdd/src/core/usecases/use_case.dart';
 import 'package:flutter_clean_architecture_tdd/src/core/util/input_converter.dart';
 import 'package:flutter_clean_architecture_tdd/src/features/number_trivia/domain/entities/number_trivia.dart';
 import 'package:flutter_clean_architecture_tdd/src/features/number_trivia/domain/usecases/get_concrete_number_trivia.dart';
@@ -39,17 +39,28 @@ class NumberTriviaBloc extends Bloc<NumberTriviaEvent, NumberTriviaState> {
         (failure) async* {
           yield Error(message: INVALID_INPUT_FAILURE_MESSAGE);
         },
-        // Although the "success case" doesn't interest us with the current test,
-        // we still have to handle it somehow.
         (integer) async* {
           yield Loading();
 
-          final number =
-              await getConcreteNumberTrivia.call(Params(number: integer));
-          yield number.fold((l) => throw UnimplementedError(), (right) {
-            return Loaded(numberTrivia: right);
-          });
+          final failureOrTrivia =
+              await getConcreteNumberTrivia(Params(number: integer));
+
+          yield failureOrTrivia.fold(
+            (failure) => Error(message: SERVER_FAILURE_MESSAGE),
+            (trivia) => Loaded(numberTrivia: trivia),
+          );
         },
+      );
+    }
+
+    if (event is GetTriviaForRandom) {
+      yield Loading();
+
+      final failureOrTrivia = await getRandomNumberTrivia(NoParams());
+
+      yield failureOrTrivia.fold(
+        (failure) => Error(message: SERVER_FAILURE_MESSAGE),
+        (trivia) => Loaded(numberTrivia: trivia),
       );
     }
   }

@@ -1,6 +1,7 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:dartz/dartz.dart';
 import 'package:flutter_clean_architecture_tdd/src/core/error/failures.dart';
+import 'package:flutter_clean_architecture_tdd/src/core/usecases/use_case.dart';
 import 'package:flutter_clean_architecture_tdd/src/core/util/input_converter.dart';
 import 'package:flutter_clean_architecture_tdd/src/features/number_trivia/domain/entities/number_trivia.dart';
 import 'package:flutter_clean_architecture_tdd/src/features/number_trivia/domain/usecases/get_concrete_number_trivia.dart';
@@ -38,11 +39,8 @@ void main() {
   });
 
   group('GetConcreteNumberTrivia', () {
-    // The event takes in a String
     final tNumberString = '1';
-    // This is the successful output of the InputConverter
     final tNumberParsed = int.parse(tNumberString);
-    // NumberTrivia instance is needed too, of course
     final tNumberTrivia = NumberTrivia(number: 1, text: 'test trivia');
 
     blocTest(
@@ -69,7 +67,98 @@ void main() {
       },
       act: (bloc) =>
           bloc.add(GetTriviaForConcreteNumber(number: tNumberString)),
+      verify: (_) {
+        verify(mockGetConcreteNumberTrivia(Params(number: tNumberParsed)));
+      },
+    );
+
+    blocTest(
+      'should emit [Loading, Loaded]  when data is gotten successfully',
+      build: () {
+        when(mockInputConverter.stringToUnsignedInteger(any))
+            .thenReturn(Right(tNumberParsed));
+        when(mockGetConcreteNumberTrivia.call(any))
+            .thenAnswer((_) async => Right(tNumberTrivia));
+
+        return bloc;
+      },
+      act: (bloc) =>
+          bloc.add(GetTriviaForConcreteNumber(number: tNumberString)),
       expect: () => [Loading(), Loaded(numberTrivia: tNumberTrivia)],
     );
+
+    blocTest(
+      'should emit [Loading, Error] when getting data fails caused by ServerFailure',
+      build: () {
+        when(mockInputConverter.stringToUnsignedInteger(any))
+            .thenReturn(Right(tNumberParsed));
+        when(mockGetConcreteNumberTrivia(any))
+            .thenAnswer((_) async => Left(ServerFailure()));
+
+        return bloc;
+      },
+      act: (bloc) =>
+          bloc.add(GetTriviaForConcreteNumber(number: tNumberString)),
+      expect: () => [Loading(), Error(message: SERVER_FAILURE_MESSAGE)],
+    );
+
+    blocTest(
+      'should emit [Loading, Error] when getting data fails caused by CacheFailure',
+      build: () {
+        when(mockInputConverter.stringToUnsignedInteger(any))
+            .thenReturn(Right(tNumberParsed));
+        when(mockGetConcreteNumberTrivia(any))
+            .thenAnswer((_) async => Left(CacheFailure()));
+
+        return bloc;
+      },
+      act: (bloc) =>
+          bloc.add(GetTriviaForConcreteNumber(number: tNumberString)),
+      expect: () => [Loading(), Error(message: CACHE_FAILURE_MESSAGE)],
+    );
+  });
+
+  group('GetRandomNumberTrivia', () {
+    final tNumberTrivia = NumberTrivia(number: 1, text: 'test trivia');
+
+    blocTest(
+      'should get data from GetRandomNumberTrivia use case',
+      build: () {
+        when(mockGetRandomNumberTrivia.call(any))
+            .thenAnswer((_) async => Right(tNumberTrivia));
+
+        return bloc;
+      },
+      act: (bloc) => bloc.add(GetTriviaForRandom()),
+      verify: (_) {
+        verify(mockGetRandomNumberTrivia(NoParams()));
+      },
+    );
+
+
+    blocTest(
+      'should emit [Loading, Loaded] when data is gotten successfully',
+      build: () {
+        when(mockGetRandomNumberTrivia.call(any))
+            .thenAnswer((_) async => Right(tNumberTrivia));
+
+        return bloc;
+      },
+      act: (bloc) => bloc.add(GetTriviaForRandom()),
+      expect: () => [Loading(), Loaded(numberTrivia: tNumberTrivia)],
+    );
+
+    blocTest(
+      'should emit [Error] when getting data fails',
+      build: () {
+        when(mockGetRandomNumberTrivia.call(any))
+            .thenAnswer((_) async => Left(ServerFailure()));
+
+        return bloc;
+      },
+      act: (bloc) => bloc.add(GetTriviaForRandom()),
+      expect: () => [Loading(), Error(message: SERVER_FAILURE_MESSAGE)],
+    );
+
   });
 }
