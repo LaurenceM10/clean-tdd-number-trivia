@@ -24,8 +24,21 @@ class NumberTriviaPage extends StatelessWidget {
                 builder: (context, state) {
                   if (state is Empty) {
                     return Text('Start searching!');
-                  } else if(state is Loading) {
+                  } else if (state is Loading) {
                     return CircularProgressIndicator();
+                  } else if (state is Loaded) {
+                    return Container(
+                      child: Column(
+                        children: [
+                          Text('${state.numberTrivia.number}'),
+                          Text('${state.numberTrivia.text}'),
+                        ],
+                      ),
+                    );
+                  } else if (state is Error) {
+                    return Text(
+                      '${state.message}'
+                    );
                   }
 
                   return Text('');
@@ -85,7 +98,7 @@ class _TriviaControlsState extends State<TriviaControls> {
                   backgroundColor:
                       MaterialStateProperty.all(Colors.lightBlueAccent),
                 ),
-                onPressed: () {},
+                onPressed: _dispatchRandom,
                 child: Text('Random'),
               ),
             ),
@@ -99,7 +112,7 @@ class _TriviaControlsState extends State<TriviaControls> {
                   backgroundColor: MaterialStateProperty.all(
                       Colors.lightBlueAccent.shade700),
                 ),
-                onPressed: () {},
+                onPressed: _dispatchConcrete,
                 child: Text('Concrete'),
               ),
             ),
@@ -107,5 +120,19 @@ class _TriviaControlsState extends State<TriviaControls> {
         )
       ],
     );
+  }
+
+  void _dispatchConcrete() {
+    // Clearing the TextField to prepare it for the next inputted number
+    controller.clear();
+    BlocProvider.of<NumberTriviaBloc>(context)
+        .add(GetTriviaForConcreteNumber(number: inputStr));
+  }
+
+  void _dispatchRandom() {
+    // Clearing the TextField to prepare it for the next inputted number
+    controller.clear();
+    BlocProvider.of<NumberTriviaBloc>(context)
+        .add(GetTriviaForRandom());
   }
 }
