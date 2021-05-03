@@ -2,47 +2,66 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_clean_architecture_tdd/injection_container.dart';
 import 'package:flutter_clean_architecture_tdd/src/features/number_trivia/presentation/bloc/number_trivia_bloc.dart';
+import 'package:flutter_clean_architecture_tdd/src/features/number_trivia/presentation/widgets/trivia_controls.dart';
 
 class NumberTriviaPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: null,
-      body: buildBody(),
+      body: buildBody(context),
     );
   }
 
-  BlocProvider<NumberTriviaBloc> buildBody() {
+  BlocProvider<NumberTriviaBloc> buildBody(BuildContext context) {
     return BlocProvider(
       create: (_) => serviceLocator<NumberTriviaBloc>(),
       child: SafeArea(
-        child: Padding(
+        child: Container(
           padding: const EdgeInsets.all(18.0),
           child: Column(
             children: [
-              BlocBuilder<NumberTriviaBloc, NumberTriviaState>(
-                builder: (context, state) {
-                  if (state is Empty) {
-                    return Text('Start searching!');
-                  } else if (state is Loading) {
-                    return CircularProgressIndicator();
-                  } else if (state is Loaded) {
-                    return Container(
-                      child: Column(
+              Container(
+                height: MediaQuery.of(context).size.height * 0.3,
+                child: BlocBuilder<NumberTriviaBloc, NumberTriviaState>(
+                  builder: (context, state) {
+                    if (state is Empty) {
+                      return Text('Start searching!');
+                    } else if (state is Loading) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (state is Loaded) {
+                      return Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('${state.numberTrivia.number}'),
-                          Text('${state.numberTrivia.text}'),
+                          Text(
+                            '${state.numberTrivia.number}',
+                            style: TextStyle(
+                              color: Colors.green,
+                              fontSize: 32,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(
+                            height: 12,
+                          ),
+                          Text(
+                            '${state.numberTrivia.text}',
+                            style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w400,
+                                letterSpacing: 1.2),
+                            textAlign: TextAlign.center,
+                          ),
                         ],
-                      ),
-                    );
-                  } else if (state is Error) {
-                    return Text(
-                      '${state.message}'
-                    );
-                  }
+                      );
+                    } else if (state is Error) {
+                      return Center(child: Text('${state.message}'));
+                    }
 
-                  return Text('');
-                },
+                    return Text('');
+                  },
+                ),
               ),
               TriviaControls(),
             ],
@@ -53,86 +72,3 @@ class NumberTriviaPage extends StatelessWidget {
   }
 }
 
-class TriviaControls extends StatefulWidget {
-  const TriviaControls({
-    Key key,
-  }) : super(key: key);
-
-  @override
-  _TriviaControlsState createState() => _TriviaControlsState();
-}
-
-class _TriviaControlsState extends State<TriviaControls> {
-  final controller = TextEditingController();
-  String inputStr;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(vertical: 2, horizontal: 12),
-          decoration: BoxDecoration(
-              color: Colors.grey.shade200,
-              borderRadius: BorderRadius.circular(12)),
-          child: TextField(
-            controller: controller,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: 'Input a number',
-            ),
-            onChanged: (value) {
-              inputStr = value;
-            },
-          ),
-        ),
-        SizedBox(
-          height: 24,
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  elevation: MaterialStateProperty.all(0),
-                  backgroundColor:
-                      MaterialStateProperty.all(Colors.lightBlueAccent),
-                ),
-                onPressed: _dispatchRandom,
-                child: Text('Random'),
-              ),
-            ),
-            SizedBox(
-              width: 12,
-            ),
-            Expanded(
-              child: ElevatedButton(
-                style: ButtonStyle(
-                  elevation: MaterialStateProperty.all(0),
-                  backgroundColor: MaterialStateProperty.all(
-                      Colors.lightBlueAccent.shade700),
-                ),
-                onPressed: _dispatchConcrete,
-                child: Text('Concrete'),
-              ),
-            ),
-          ],
-        )
-      ],
-    );
-  }
-
-  void _dispatchConcrete() {
-    // Clearing the TextField to prepare it for the next inputted number
-    controller.clear();
-    BlocProvider.of<NumberTriviaBloc>(context)
-        .add(GetTriviaForConcreteNumber(number: inputStr));
-  }
-
-  void _dispatchRandom() {
-    // Clearing the TextField to prepare it for the next inputted number
-    controller.clear();
-    BlocProvider.of<NumberTriviaBloc>(context)
-        .add(GetTriviaForRandom());
-  }
-}
